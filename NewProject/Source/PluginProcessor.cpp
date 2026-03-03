@@ -19,7 +19,8 @@ NewProjectAudioProcessor::NewProjectAudioProcessor()
                       #endif
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                      #endif
-                       )
+                       ),
+    apvts(*this, nullptr, "Parameters", createParameterLayout())
 #endif
 {
 }
@@ -95,6 +96,7 @@ void NewProjectAudioProcessor::prepareToPlay (double sampleRate, int samplesPerB
 {
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
+    bitCrush.prep(sampleRate);
 }
 
 void NewProjectAudioProcessor::releaseResources()
@@ -135,6 +137,15 @@ void NewProjectAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
 
+    currentBitDepth = *apvts.getRawParameterValue("bitDepth");
+    currentDownsample = *apvts.getRawParameterValue("downsample");
+
+    // Update DSP module
+    bitCrush.setParameters(currentBitDepth, currentDownsample);
+
+    // Process bitcrush
+    bitCrush.process(buffer);
+
     // In case we have more outputs than inputs, this code clears any output
     // channels that didn't contain input data, (because these aren't
     // guaranteed to be empty - they may contain garbage).
@@ -156,6 +167,7 @@ void NewProjectAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
 
         // ..do something to the data...
     }
+
 }
 
 //==============================================================================
@@ -181,6 +193,26 @@ void NewProjectAudioProcessor::setStateInformation (const void* data, int sizeIn
 {
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
+}
+
+juce::AudioProcessorValueTreeState::ParameterLayout
+NewProjectAudioProcessor::createParameterLayout()
+{
+    juce::AudioProcessorValueTreeState::ParameterLayout layout;
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "bitDepth",
+        "Bit Depth",
+        juce::NormalisableRange<float>(1.0f, 16.0f, 1.0f),
+        8.0f));
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "downsample",
+        "Downsample",
+        juce::NormalisableRange<float>(1.0f, 20.0f, 1.0f),
+        1.0f));
+
+    return layout;
 }
 
 //==============================================================================

@@ -23,6 +23,13 @@ public:
     //==============================================================================
     void paint (juce::Graphics&) override;
     void resized() override;
+    
+    // ===== Bit slider =====
+    juce::Slider bitDepthSlider;
+    juce::Label bitDepthLabel;
+
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment>
+        bitDepthAttachment;
 
 private:
     // This reference is provided as a quick way for your editor to
