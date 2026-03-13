@@ -10,6 +10,7 @@
 
 #include <JuceHeader.h>
 #include "BitCrush.h"
+#include "Distortion.h"
 
 //==============================================================================
 /**
@@ -62,10 +63,15 @@ private:
     //==============================================================================
     // ==== Effects ====
     BitCrush bitCrush;
+    Distortion distortion;
 
     // ==== States ====
     float currentBitDepth = 8.0f;
     float currentDownsample = 1.0f;
+
+    float currentDistDrive = 1.0f;
+    float currentDistMix = 0.0f;
+    float currentDistType = 0;
 
 
 

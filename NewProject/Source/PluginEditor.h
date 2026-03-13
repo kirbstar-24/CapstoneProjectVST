@@ -31,6 +31,19 @@ public:
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment>
         bitDepthAttachment;
 
+    // ===== Dist Slider =====
+    juce::Slider    distDriveSlider;
+    juce::Label     distDriveLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> distDriveAttachment;
+
+    juce::Slider    distMixSlider;
+    juce::Label     distMixLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> distMixAttachment;
+
+    juce::ComboBox  distTypeBox;
+    juce::Label     distTypeLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> distTypeAttachment;
+
 private:
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.

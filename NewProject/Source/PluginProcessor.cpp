@@ -140,33 +140,21 @@ void NewProjectAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     currentBitDepth = *apvts.getRawParameterValue("bitDepth");
     currentDownsample = *apvts.getRawParameterValue("downsample");
 
+    currentDistDrive = *apvts.getRawParameterValue("distDrive");
+    currentDistMix = *apvts.getRawParameterValue("distMix");
+
+    currentDistType = (int) *apvts.getRawParameterValue("distType");
+
     // Update DSP module
     bitCrush.setParameters(currentBitDepth, currentDownsample);
-
-    // Process bitcrush
+    distortion.setParameters(currentDistDrive, currentDistMix, currentDistType);
+    // Process 
     bitCrush.process(buffer);
+    distortion.process(buffer);
 
-    // In case we have more outputs than inputs, this code clears any output
-    // channels that didn't contain input data, (because these aren't
-    // guaranteed to be empty - they may contain garbage).
-    // This is here to avoid people getting screaming feedback
-    // when they first compile a plugin, but obviously you don't need to keep
-    // this code if your algorithm always overwrites all the output channels.
+
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
-
-    // This is the place where you'd normally do the guts of your plugin's
-    // audio processing...
-    // Make sure to reset the state if your inner loop is processing
-    // the samples and the outer loop is handling the channels.
-    // Alternatively, you can process the samples with the channels
-    // interleaved by keeping the same state.
-    for (int channel = 0; channel < totalNumInputChannels; ++channel)
-    {
-        auto* channelData = buffer.getWritePointer (channel);
-
-        // ..do something to the data...
-    }
 
 }
 
@@ -199,7 +187,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout
 NewProjectAudioProcessor::createParameterLayout()
 {
     juce::AudioProcessorValueTreeState::ParameterLayout layout;
-
+    //Bitcrush
     layout.add(std::make_unique<juce::AudioParameterFloat>(
         "bitDepth",
         "Bit Depth",
@@ -211,6 +199,20 @@ NewProjectAudioProcessor::createParameterLayout()
         "Downsample",
         juce::NormalisableRange<float>(1.0f, 20.0f, 1.0f),
         1.0f));
+    // Distortion
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "distDrive",
+        "Drive",
+        juce::NormalisableRange<float>(1.0f, 20.0f, 0.01f, 0.4f), 
+        1.0f));
+        
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "distMix", "Distortion Mix",
+        juce::NormalisableRange<float>(0.0f, 1.0f), 0.0f));
+
+    layout.add(std::make_unique<juce::AudioParameterChoice>(
+        "distType", "Distortion Type",
+        juce::StringArray{ "Soft Clip", "Hard Clip", "Foldback" }, 0));
 
     return layout;
 }
