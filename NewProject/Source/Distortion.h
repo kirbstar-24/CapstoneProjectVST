@@ -1,50 +1,63 @@
 #pragma once
+#include <JuceHeader.h>
+#include <cmath>
 
 class Distortion
 {
-public: 
-	enum class Type {SoftClip, HardClip, Foldback};
+public:
+	enum class Type { SoftClip = 0, HardClip = 1, Foldback = 2 };
 
-	void prepare(double sampleRate, int blockSize)
+	void prep(float drive, float mix, int type)
 	{
-		currentSampleRate = sampleRate;
-
-		juce::dsp::ProccessSpec spec{ sampleRate, (uint32)blockSize, 2 };
-		dcBlocker.prepare(spec);
-		dcBlocker.setType(juce::dsp::StateVariableTPTFilterType::highpass);
-		dcBlocker.setCutoffFrequency(20.0f);
+		currentDrive = drive;
+		currentMix = mix;
+		currentType = static_cast<Type>(type);
 	}
 
-	float process(float sample, float drive, float mix, Type type)
+	void process(juce::AudioBuffer<float>& buffer)
 	{
-		float driven = sample * drive;
-		float wet;
+		const int numSamples = buffer.getNumSamples();
+		const int numChannels = buffer.getNumChannels();
+		for (int ch = 0; ch < numChannels; ++ch)
+		{
+			auto* channelData = buffer.getWritePointer(ch);
 
-		if (type == Type::SoftClip)
-		{
-			wet = std::tanh(driven);
-		}
-		else if (type == Type::HardClip)
-		{
-			wet = juce::jlimit(-1.0f, 1.0f, driven);
-		}
-		else if (type == Type::Foldback)
-		{
-			wet = driven;
-			while (wet > 1.0f || wet < -1.0f)
-				wet = std::abs(std::abs(wet) - 2.0f) - 1.0f;
-		}
+			for (int i = 0; i < numSamples; ++i)
+			{
+				float dry = channelData[i];
+				float wet = processSample(dry * currentDrive);
 
-		return wet * mix + sample * (1.0f - mix);
+				wet *= (1.0f / std::sqrt(currentDrive)); //gain compensation
+
+				channelData[i] = wet * currentMix + dry * (1.0f - currentMix)
+			}
+
+		}
 	}
 
-	void processDCBlock(juce::dsp::AudioBlock<float>& block)
-	{
-		juce::dsp::ProcessContextReplaciong<float> ctx(block)
-		dcBlocker.process(ctx);
-	}
 
 private:
-	double currentSampleRate = 44100.00;
-	juce::dsp::StateVariableTPTFilter<float> dcBlocker;
+	float processSample(float n)
+	{
+		if (currentType == Type::SoftClip)
+		{
+			return std::tanh(x);
+		}
+		else if (currentType == Type::HardClip)
+		{
+			return juce::jlimit(-1.0, 1.0f, x);
+		}
+		else if (currentType == Type::Foldback)
+		{
+			while (x > 1.0f || x < < -1.0f)
+				x = std::abs(std::abs(x) - 2.0f) - 1.0f;
+			return n
+		}
+
+		return n;
+	}
+
+	float currentDrive = 1.0f;
+	float currentMix = 0.0f;
+	Type  currentType = Type::SoftClip;
 };
