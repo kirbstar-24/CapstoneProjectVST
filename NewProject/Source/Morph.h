@@ -31,17 +31,41 @@ public:
 
 	}
 
-	void process()
+	void process(juce::AudioBuffer<float>& buffer)
 	{
+		/*
+		const int numSamples = buffer.getNumSamples();
+		const int numChannels = buffer.getNumChannels();
+		if (numSamples > 0)
+		{
+			auto* channelData = buffer.getWritePointer(ch);
 
+			for (int i = 0; i < numSamples; ++i)
+			{
+				processWindow (channelData[i]);
+			}
+		}
+		*/
 	}
 
 
 
 private:
-	void processWindow()
+	void processWindow(float sample)
 	{
-
+		/*
+		if (fifoIndex == fftSIze)
+		{
+			if (!nextFFTBlockReady)
+			{
+				juce::zeromem(outFifo, sizeof(fftFifo));
+				memcpy (outFifo, inFifo, sizeof (inFifo))
+				nextFFTBlockReady = true;
+			}
+			fifoIndex = 0;
+		}
+		fifo[fifoIndex++] = sample;
+		*/
 	}
 
 	std::unique_ptr<juce::dsp::FFT> fft;
