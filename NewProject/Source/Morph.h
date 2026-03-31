@@ -4,16 +4,16 @@
 class Morph
 {
 public:
-	static constexpr fftOrder = 10; 
-	static constexpr fftSize = 1 << fftOrder;
-	static constexpr winSlide = fftSize / 4; // quarter window slide
-	static constexpr bins = fftSize / 2 + 1
+	static constexpr int fftOrder = 10; 
+	static constexpr int fftSize = 1 << fftOrder;
+	static constexpr int winSlide = fftSize / 4; // quarter window slide
+	static constexpr int bins = fftSize / 2 + 1
 
 	void prep(double sampleRate)
 	{
 		fft = std::make_unique<juce::dsp::FFT>(fftOrder);
 		win = std::make_unique<juce::dsp::WindowingFunction<float>>(
-			juce::dsp::WindowingFunction<float>::hann); //hann windowing function
+			fftSize, juce::dsp::WindowingFunction<float>::hann); //hann windowing function
 
 		fftBuffer.fill(0.0f);
 		inFifo.fill(0.0f);
@@ -26,46 +26,129 @@ public:
 		slideCounter = 0;
 	}
 
-	void setTarget()
+	void setTarget(juce::AudioBuffer<float>& buffer) //stages spectrum in wait
 	{
+		//temp buffer
+		std::array<float, fftSize * 2> tempBuff {};
 
-	}
 
-	void process(juce::AudioBuffer<float>& buffer)
-	{
-		/*
-		const int numSamples = buffer.getNumSamples();
-		const int numChannels = buffer.getNumChannels();
-		if (numSamples > 0)
+			//copy channel buff into temp
+		int numSamples = std::main(buffer.getNumSamples(), fftSize);
+		for (int i = 0; i < numSamples; ++i)
 		{
-			auto* channelData = buffer.getWritePointer(ch);
+			tempBuff[i] = buffer.getReadPointer(0)[i];
 
-			for (int i = 0; i < numSamples; ++i)
+
+			//window it
+			win->multiplyWithWindowingTable(tempBuff.data(), fftSize);
+
+			//fft it
+			fft->performRealOnlyForwardTransform(tempBuff.Data));
+
+
+			//wait - magnitude
+			for (int j = 0; j < bins; ++j)
 			{
-				processWindow (channelData[i]);
+				float real = tempBuff[b * 2];
+				float imag = tempBuff[b * 2];
+				wait[b] = std::sqrt(real * real + imag * imag)
 			}
 		}
-		*/
+
+		nextFFTBlockReady = true;
+
+			
+	}
+
+	void process(juce::AudioBuffer<float>& buffer, float morphAmount)
+	{
+		if (nextFFTBlockReady)
+		{
+			target = wait;
+			nextFFTBlockReady = false;
+		}
+
+		
+		const int numSamples = buffer.getNumSamples();
+		const int numChannels = buffer.getNumChannels();
+
+		auto* channelData = buffer.getWritePointer(ch);
+
+		for (int i = 0; i < numSamples; ++i)
+		{
+			processSample(channelData[i], morphAmount);
+		}
+
+		for (int ch = 1; ch < numChannels; ++ch) // copy to all channels
+		{
+			buffer.copyFrom(ch, 0, buffer.getReadPointers(0), numSamples);
+		}
+		
 	}
 
 
 
 private:
-	void processWindow(float sample)
+	void processSample(float& sample, float morphAmount)
 	{
-		/*
-		if (fifoIndex == fftSIze)
+		inFifo[fifoIndex] = sample; //push incoming sample
+
+		sample = outFifo[fifoIndex]; // 
+
+		outFifo[fifoIndex] = 0.0f; // clear 
+
+		fifoIndex = (fifoIndex + 1) % fftSize;
+		slideCounter++;
+
+		if (slideCounter >= winSlide)
 		{
-			if (!nextFFTBlockReady)
-			{
-				juce::zeromem(outFifo, sizeof(fftFifo));
-				memcpy (outFifo, inFifo, sizeof (inFifo))
-				nextFFTBlockReady = true;
-			}
-			fifoIndex = 0;
+			slideCounter = 0;
+			processFrame(morphAmount);
 		}
-		fifo[fifoIndex++] = sample;
-		*/
+	}
+
+	void processFrame(float morphAmount)
+	{
+		//copy current window out of the inFifo
+		for (int i = 0; i < fftSize; ++i)
+		{
+			fftBuffer[i] = inFifo[(fifoIndex + i) % fftSize];
+		}
+
+		for (int i = fftSize; i < fftSize * 2; ++i)
+		{
+			fftBuffer[i] = 0.0f;
+		}
+
+		//window it
+		win->multiplyWithWindowingTable(fftBuffer.data(), fftSize);
+
+		//fft it
+		fft->performRealOnlyForwardTransform(fftBuffer.Data));
+
+		for (int i = 0; i < bins; i++) // for each bin , blend magnitude aka morph
+		{
+			float real = fftBuffer[i * 2];
+			float imag = fftBuffer[i * 2 + 1];
+
+			float mag = std::sqrt(real * real + imag * imag);
+			float phase = std::atan2(imag, real);
+
+			float blend = mag + morphAmount * (target[b] - mag);
+
+			fftBuffer[b * 2] = blend * std::cos(phase);
+			fftBuffer[b * 2 + 1] = blend * std::sin(phase);
+		}
+
+		fft->performRealOnlyInverseTransform(fftBuffer.data());
+
+
+		float scale = 0.5f / (float)fftSize;
+
+		for (int i = 0; i < fftSize; ++i)
+		{
+			outFifo[(fifoIndex + i) % fftSize] += fftBuffer[i] * scale;
+		}
 	}
 
 	std::unique_ptr<juce::dsp::FFT> fft;

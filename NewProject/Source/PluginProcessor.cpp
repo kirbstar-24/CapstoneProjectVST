@@ -13,13 +13,11 @@
 NewProjectAudioProcessor::NewProjectAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
      : AudioProcessor (BusesProperties()
-                     #if ! JucePlugin_IsMidiEffect
-                      #if ! JucePlugin_IsSynth
                        .withInput  ("Input",  juce::AudioChannelSet::stereo(), true)
-                      #endif
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
-                     #endif
+                       .withInput("Sidechain", juce::AudioChannelSet::stereo(), false)
                        ),
+                       
     apvts(*this, nullptr, "Parameters", createParameterLayout())
 #endif
 {
@@ -153,6 +151,7 @@ void NewProjectAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     distortion.process(buffer);
 
 
+
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
 
@@ -213,6 +212,10 @@ NewProjectAudioProcessor::createParameterLayout()
     layout.add(std::make_unique<juce::AudioParameterChoice>(
         "distType", "Distortion Type",
         juce::StringArray{ "Soft Clip", "Hard Clip", "Foldback" }, 0));
+
+    layout.add(std::make_unique<juce::AudioParameterChoice>(
+        "morphSource", "Morph Source",
+        juce::StringArray{ "Sidechain", "Sine", "Saw", "Square", "Noise" }, 1));
 
     return layout;
 }
