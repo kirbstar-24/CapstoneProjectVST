@@ -7,11 +7,12 @@ public:
 	static constexpr int fftOrder = 10; 
 	static constexpr int fftSize = 1 << fftOrder;
 	static constexpr int winSlide = fftSize / 4; // quarter window slide
-	static constexpr int bins = fftSize / 2 + 1
+	static constexpr int bins = fftSize / 2 + 1;
 
 	void prep(double sampleRate)
 	{
 		fft = std::make_unique<juce::dsp::FFT>(fftOrder);
+
 		win = std::make_unique<juce::dsp::WindowingFunction<float>>(
 			fftSize, juce::dsp::WindowingFunction<float>::hann); //hann windowing function
 
@@ -43,15 +44,15 @@ public:
 			win->multiplyWithWindowingTable(tempBuff.data(), fftSize);
 
 			//fft it
-			fft->performRealOnlyForwardTransform(tempBuff.Data));
+			fft->performRealOnlyForwardTransform(tempBuff.data());
 
 
 			//wait - magnitude
 			for (int j = 0; j < bins; ++j)
 			{
-				float real = tempBuff[b * 2];
-				float imag = tempBuff[b * 2];
-				wait[b] = std::sqrt(real * real + imag * imag)
+				float real = tempBuff[j * 2];
+				float imag = tempBuff[j * 2];
+				wait[j] = std::sqrt(real * real + imag * imag);
 			}
 		}
 
@@ -72,7 +73,7 @@ public:
 		const int numSamples = buffer.getNumSamples();
 		const int numChannels = buffer.getNumChannels();
 
-		auto* channelData = buffer.getWritePointer(ch);
+		auto* channelData = buffer.getWritePointer(ch); // fix!!! channel may need to be piped through from gui selector
 
 		for (int i = 0; i < numSamples; ++i)
 		{
@@ -81,7 +82,7 @@ public:
 
 		for (int ch = 1; ch < numChannels; ++ch) // copy to all channels
 		{
-			buffer.copyFrom(ch, 0, buffer.getReadPointers(0), numSamples);
+			buffer.copyFrom(ch, 0, buffer.getReadPointer(0), numSamples);
 		}
 		
 	}
@@ -124,7 +125,7 @@ private:
 		win->multiplyWithWindowingTable(fftBuffer.data(), fftSize);
 
 		//fft it
-		fft->performRealOnlyForwardTransform(fftBuffer.Data));
+		fft->performRealOnlyForwardTransform(fftBuffer.Data);
 
 		for (int i = 0; i < bins; i++) // for each bin , blend magnitude aka morph
 		{
@@ -134,10 +135,10 @@ private:
 			float mag = std::sqrt(real * real + imag * imag);
 			float phase = std::atan2(imag, real);
 
-			float blend = mag + morphAmount * (target[b] - mag);
+			float blend = mag + morphAmount * (target[i] - mag);
 
-			fftBuffer[b * 2] = blend * std::cos(phase);
-			fftBuffer[b * 2 + 1] = blend * std::sin(phase);
+			fftBuffer[i * 2] = blend * std::cos(phase);
+			fftBuffer[i * 2 + 1] = blend * std::sin(phase);
 		}
 
 		fft->performRealOnlyInverseTransform(fftBuffer.data());

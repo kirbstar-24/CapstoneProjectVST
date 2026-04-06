@@ -95,6 +95,8 @@ void NewProjectAudioProcessor::prepareToPlay (double sampleRate, int samplesPerB
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
     bitCrush.prep(sampleRate);
+    soundBank.prep(sampleRate);
+    morph.prep(sampleRate);
 }
 
 void NewProjectAudioProcessor::releaseResources()
@@ -140,15 +142,23 @@ void NewProjectAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
 
     currentDistDrive = *apvts.getRawParameterValue("distDrive");
     currentDistMix = *apvts.getRawParameterValue("distMix");
-
     currentDistType = (int) *apvts.getRawParameterValue("distType");
+
+    currentWaveType = (int)*apvts.getRawParameterValue("morphSource");
+
+    morphAmount = *apvts.getRawParameterValue("morphAmount");
 
     // Update DSP module
     bitCrush.setParameters(currentBitDepth, currentDownsample);
     distortion.setParameters(currentDistDrive, currentDistMix, currentDistType);
+    
     // Process 
     bitCrush.process(buffer);
     distortion.process(buffer);
+
+
+    //morph - add logic for switching sources!!!
+    morph.process(buffer, morphAmount);
 
 
 
@@ -212,10 +222,14 @@ NewProjectAudioProcessor::createParameterLayout()
     layout.add(std::make_unique<juce::AudioParameterChoice>(
         "distType", "Distortion Type",
         juce::StringArray{ "Soft Clip", "Hard Clip", "Foldback" }, 0));
-
+    // Soundbank
     layout.add(std::make_unique<juce::AudioParameterChoice>(
         "morphSource", "Morph Source",
-        juce::StringArray{ "Sidechain", "Sine", "Saw", "Square", "Noise" }, 1));
+        juce::StringArray{ "Sidechain", "Sine", "Saw", "Square", "Noise" }, 1))
+    //Morph
+        layout.add(std::make_unique<juce::AudioParameterChoice>(
+            "morphAmount", "Morph",
+            juce::NormalisableRange<float>(0.0f, 1.0f), 0.0f));
 
     return layout;
 }

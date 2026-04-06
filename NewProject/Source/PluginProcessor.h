@@ -11,6 +11,8 @@
 #include <JuceHeader.h>
 #include "BitCrush.h"
 #include "Distortion.h"
+#include "Morph.h"
+#include "SoundBank.h"
 
 //==============================================================================
 /**
@@ -64,6 +66,8 @@ private:
     // ==== Effects ====
     BitCrush bitCrush;
     Distortion distortion;
+    Morph morph;
+    SoundBank soundBank;
 
     // ==== States ====
     float currentBitDepth = 8.0f;
@@ -72,6 +76,10 @@ private:
     float currentDistDrive = 1.0f;
     float currentDistMix = 0.0f;
     float currentDistType = 0;
+
+    float currentWaveType = 0;
+
+    float morphAmount = 0;
 
 
 
