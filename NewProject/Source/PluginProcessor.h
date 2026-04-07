@@ -75,11 +75,14 @@ private:
 
     float currentDistDrive = 1.0f;
     float currentDistMix = 0.0f;
-    float currentDistType = 0;
+    int currentDistType = 0;
 
     float currentWaveType = 0;
 
     float morphAmount = 0;
+
+    float currentMorphFreq = 110.0f;
+    juce::AudioBuffer<float> morphSourceBuffer;
 
 
 

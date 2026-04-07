@@ -44,6 +44,19 @@ public:
     juce::Label     distTypeLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> distTypeAttachment;
 
+    // === Morph ===
+    juce::Slider    morphAmountSlider;
+    juce::Label     morphAmountLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> morphAmountAttachment;
+
+    juce::Slider    morphFreqSlider;
+    juce::Label     morphFreqLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> morphFreqAttachment;
+
+    juce::ComboBox  morphSourceBox;
+    juce::Label     morphSourceLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> morphSourceAttachment;
+
 private:
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.

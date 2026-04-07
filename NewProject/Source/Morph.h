@@ -34,27 +34,27 @@ public:
 
 
 			//copy channel buff into temp
-		int numSamples = std::main(buffer.getNumSamples(), fftSize);
+		int numSamples = std::min(buffer.getNumSamples(), fftSize);
 		for (int i = 0; i < numSamples; ++i)
 		{
 			tempBuff[i] = buffer.getReadPointer(0)[i];
 
-
+		}
 			//window it
-			win->multiplyWithWindowingTable(tempBuff.data(), fftSize);
+		win->multiplyWithWindowingTable(tempBuff.data(), fftSize);
 
 			//fft it
-			fft->performRealOnlyForwardTransform(tempBuff.data());
+		fft->performRealOnlyForwardTransform(tempBuff.data());
 
 
 			//wait - magnitude
-			for (int j = 0; j < bins; ++j)
-			{
-				float real = tempBuff[j * 2];
-				float imag = tempBuff[j * 2];
-				wait[j] = std::sqrt(real * real + imag * imag);
-			}
+		for (int j = 0; j < bins; ++j)
+		{
+			float real = tempBuff[j * 2];
+			float imag = tempBuff[j * 2 + 1];
+			wait[j] = std::sqrt(real * real + imag * imag);
 		}
+
 
 		nextFFTBlockReady = true;
 
@@ -73,7 +73,7 @@ public:
 		const int numSamples = buffer.getNumSamples();
 		const int numChannels = buffer.getNumChannels();
 
-		auto* channelData = buffer.getWritePointer(ch); // fix!!! channel may need to be piped through from gui selector
+		auto* channelData = buffer.getWritePointer(0);
 
 		for (int i = 0; i < numSamples; ++i)
 		{
@@ -125,7 +125,7 @@ private:
 		win->multiplyWithWindowingTable(fftBuffer.data(), fftSize);
 
 		//fft it
-		fft->performRealOnlyForwardTransform(fftBuffer.Data);
+		fft->performRealOnlyForwardTransform(fftBuffer.data());
 
 		for (int i = 0; i < bins; i++) // for each bin , blend magnitude aka morph
 		{
@@ -144,12 +144,14 @@ private:
 		fft->performRealOnlyInverseTransform(fftBuffer.data());
 
 
-		float scale = 0.5f / (float)fftSize;
+		float scale = 160.0f / (float)fftSize;
 
 		for (int i = 0; i < fftSize; ++i)
 		{
 			outFifo[(fifoIndex + i) % fftSize] += fftBuffer[i] * scale;
 		}
+
+
 	}
 
 	std::unique_ptr<juce::dsp::FFT> fft;

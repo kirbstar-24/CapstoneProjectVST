@@ -97,6 +97,11 @@ void NewProjectAudioProcessor::prepareToPlay (double sampleRate, int samplesPerB
     bitCrush.prep(sampleRate);
     soundBank.prep(sampleRate);
     morph.prep(sampleRate);
+
+    morphSourceBuffer.setSize(2, samplesPerBlock);
+    morphSourceBuffer.clear();
+
+    setLatencySamples(Morph::fftSize);
 }
 
 void NewProjectAudioProcessor::releaseResources()
@@ -148,6 +153,9 @@ void NewProjectAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
 
     morphAmount = *apvts.getRawParameterValue("morphAmount");
 
+    currentMorphFreq = *apvts.getRawParameterValue("morphFreq");
+
+
     // Update DSP module
     bitCrush.setParameters(currentBitDepth, currentDownsample);
     distortion.setParameters(currentDistDrive, currentDistMix, currentDistType);
@@ -156,10 +164,28 @@ void NewProjectAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     bitCrush.process(buffer);
     distortion.process(buffer);
 
-
-    //morph - add logic for switching sources!!!
+    if (morphAmount > 0.0f)
+    {
+        if (currentWaveType == 0) //select if sidechain or soundbank
+        {
+            auto* sideBus = getBus(true, 1);
+            if (sideBus != nullptr && sideBus->isEnabled())
+            {
+                auto sideBuffer = getBusBuffer(buffer, true, 1);
+                morph.setTarget(sideBuffer);
+            }
+        }
+        else
+        {
+            auto waveType = static_cast<SoundBank::Wave>(currentWaveType - 1);
+            soundBank.setWave(waveType);
+            morphSourceBuffer.setSize(buffer.getNumChannels(), buffer.getNumSamples(), false, false, false);
+            morphSourceBuffer.clear();
+            soundBank.process(morphSourceBuffer, currentMorphFreq);
+            morph.setTarget(morphSourceBuffer);
+        }
+    }
     morph.process(buffer, morphAmount);
-
 
 
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
@@ -196,25 +222,21 @@ juce::AudioProcessorValueTreeState::ParameterLayout
 NewProjectAudioProcessor::createParameterLayout()
 {
     juce::AudioProcessorValueTreeState::ParameterLayout layout;
-    //Bitcrush
+
+    // BitCrusher
     layout.add(std::make_unique<juce::AudioParameterFloat>(
-        "bitDepth",
-        "Bit Depth",
-        juce::NormalisableRange<float>(1.0f, 16.0f, 1.0f),
-        8.0f));
+        "bitDepth", "Bit Depth",
+        juce::NormalisableRange<float>(1.0f, 16.0f, 1.0f), 8.0f));
 
     layout.add(std::make_unique<juce::AudioParameterFloat>(
-        "downsample",
-        "Downsample",
-        juce::NormalisableRange<float>(1.0f, 20.0f, 1.0f),
-        1.0f));
+        "downsample", "Downsample",
+        juce::NormalisableRange<float>(1.0f, 20.0f, 1.0f), 1.0f));
+
     // Distortion
     layout.add(std::make_unique<juce::AudioParameterFloat>(
-        "distDrive",
-        "Drive",
-        juce::NormalisableRange<float>(1.0f, 20.0f, 0.01f, 0.4f), 
-        1.0f));
-        
+        "distDrive", "Drive",
+        juce::NormalisableRange<float>(1.0f, 20.0f, 0.01f, 0.4f), 1.0f));
+
     layout.add(std::make_unique<juce::AudioParameterFloat>(
         "distMix", "Distortion Mix",
         juce::NormalisableRange<float>(0.0f, 1.0f), 0.0f));
@@ -222,14 +244,20 @@ NewProjectAudioProcessor::createParameterLayout()
     layout.add(std::make_unique<juce::AudioParameterChoice>(
         "distType", "Distortion Type",
         juce::StringArray{ "Soft Clip", "Hard Clip", "Foldback" }, 0));
-    // Soundbank
+
+    // SoundBank
     layout.add(std::make_unique<juce::AudioParameterChoice>(
         "morphSource", "Morph Source",
-        juce::StringArray{ "Sidechain", "Sine", "Saw", "Square", "Noise" }, 1))
-    //Morph
-        layout.add(std::make_unique<juce::AudioParameterChoice>(
-            "morphAmount", "Morph",
-            juce::NormalisableRange<float>(0.0f, 1.0f), 0.0f));
+        juce::StringArray{ "Sidechain", "Sine", "Saw", "Square", "Tri" }, 1));
+
+    // Morph
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "morphAmount", "Morph",
+        juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f), 0.0f));
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "morphFreq", "Morph Frequency",
+        juce::NormalisableRange<float>(20.0f, 2000.0f, 0.1f, 0.3f), 110.0f));
 
     return layout;
 }

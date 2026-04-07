@@ -62,6 +62,40 @@ NewProjectAudioProcessorEditor::NewProjectAudioProcessorEditor (NewProjectAudioP
     addAndMakeVisible(distTypeLabel);
     distTypeAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
         audioProcessor.apvts, "distType", distTypeBox);
+
+    // === Morph Amount ===
+    morphAmountSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
+    morphAmountSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
+    addAndMakeVisible(morphAmountSlider);
+    morphAmountLabel.setText("Morph", juce::dontSendNotification);
+    morphAmountLabel.attachToComponent(&morphAmountSlider, false);
+    addAndMakeVisible(morphAmountLabel);
+    morphAmountAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.apvts, "morphAmount", morphAmountSlider);
+
+    // === Morph Frequency ===
+    morphFreqSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
+    morphFreqSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
+    addAndMakeVisible(morphFreqSlider);
+    morphFreqLabel.setText("Morph Freq", juce::dontSendNotification);
+    morphFreqLabel.attachToComponent(&morphFreqSlider, false);
+    addAndMakeVisible(morphFreqLabel);
+    morphFreqAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.apvts, "morphFreq", morphFreqSlider);
+
+    // === Morph Source ===
+    morphSourceBox.addItem("Sidechain", 1);
+    morphSourceBox.addItem("Sine", 2);
+    morphSourceBox.addItem("Saw", 3);
+    morphSourceBox.addItem("Square", 4);
+    morphSourceBox.addItem("Tri", 5);
+    morphSourceBox.setSelectedId(2, juce::dontSendNotification);
+    addAndMakeVisible(morphSourceBox);
+    morphSourceLabel.setText("Source", juce::dontSendNotification);
+    morphSourceLabel.attachToComponent(&morphSourceBox, false);
+    addAndMakeVisible(morphSourceLabel);
+    morphSourceAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
+        audioProcessor.apvts, "morphSource", morphSourceBox);
 }
 
 NewProjectAudioProcessorEditor::~NewProjectAudioProcessorEditor()
@@ -81,26 +115,34 @@ void NewProjectAudioProcessorEditor::paint (juce::Graphics& g)
 void NewProjectAudioProcessorEditor::resized()
 {
     auto area = getLocalBounds().reduced(20);
-    auto leftSection = area.removeFromLeft(area.getWidth() / 2);
-    auto rightSection = area;
+    auto sectionW = area.getWidth() / 3;
+    int  knobSize = 90;
+    int  labelH = 30;
+    int  comboH = 24;
 
-    // --- BitCrush section: one knob centred ---
-    auto bitArea = leftSection.reduced(20);
-    bitArea.removeFromTop(30); // space for label
-    bitDepthSlider.setBounds(bitArea.withSizeKeepingCentre(100, 100));
+    // === BitCrusher ===
+    auto bitArea = area.removeFromLeft(sectionW);
+    bitArea.removeFromTop(labelH);
+    auto bitRow = bitArea.removeFromTop(knobSize + labelH);
+    bitDepthSlider.setBounds(bitRow.removeFromLeft(sectionW / 2).withSizeKeepingCentre(knobSize, knobSize));
 
-    // --- Distortion section: two knobs side by side, selector below ---
-    auto distKnobRow = rightSection.reduced(20);
-    distKnobRow.removeFromTop(30); // space for labels
+    // === Distortion ===
+    auto distArea = area.removeFromLeft(sectionW);
+    distArea.removeFromTop(labelH);
+    auto distRow = distArea.removeFromTop(knobSize + labelH);
+    distDriveSlider.setBounds(distRow.removeFromLeft(sectionW / 2).withSizeKeepingCentre(knobSize, knobSize));
+    distMixSlider.setBounds(distRow.withSizeKeepingCentre(knobSize, knobSize));
+    auto distComboRow = distArea.removeFromTop(labelH + comboH);
+    distComboRow.removeFromTop(labelH);
+    distTypeBox.setBounds(distComboRow.withSizeKeepingCentre(160, comboH));
 
-    auto driveArea = distKnobRow.removeFromLeft(distKnobRow.getWidth() / 2);
-    distDriveSlider.setBounds(driveArea.withSizeKeepingCentre(100, 100));
-
-    distMixSlider.setBounds(distKnobRow.withSizeKeepingCentre(100, 100));
-
-    // Selector sits below the knobs
-    auto selectorArea = rightSection.removeFromBottom(50).reduced(20, 0);
-    selectorArea.removeFromTop(20); // label space
-    distTypeBox.setBounds(selectorArea.withSizeKeepingCentre(160, 24));
-
+    // === Morph ===
+    auto morphArea = area;
+    morphArea.removeFromTop(labelH);
+    auto morphRow = morphArea.removeFromTop(knobSize + labelH);
+    morphAmountSlider.setBounds(morphRow.removeFromLeft(sectionW / 2).withSizeKeepingCentre(knobSize, knobSize));
+    morphFreqSlider.setBounds(morphRow.withSizeKeepingCentre(knobSize, knobSize));
+    auto morphComboRow = morphArea.removeFromTop(labelH + comboH);
+    morphComboRow.removeFromTop(labelH);
+    morphSourceBox.setBounds(morphComboRow.withSizeKeepingCentre(160, comboH));
 }
