@@ -55,10 +55,8 @@ public:
 			wait[j] = std::sqrt(real * real + imag * imag);
 		}
 
-
 		nextFFTBlockReady = true;
-
-			
+	
 	}
 
 	void process(juce::AudioBuffer<float>& buffer, float morphAmount)

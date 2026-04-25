@@ -13,9 +13,17 @@
 NewProjectAudioProcessorEditor::NewProjectAudioProcessorEditor (NewProjectAudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p)
 {
-    // Make sure that before the constructor has finished, you've set the
-    // editor's size to whatever you need it to be.
-    setSize (800, 400);
+    setLookAndFeel(&style);
+    setSize(900, 460);
+
+    bitDepthSlider.setName("bitDepth");
+    //downsampleSlider.setName("downsample");
+    distDriveSlider.setName("drive");
+    distMixSlider.setName("mix");
+    morphAmountSlider.setName("morphAmount");
+    morphFreqSlider.setName("morphFreq");
+ 
+
     // ===== Bit Slider ======
     bitDepthSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     bitDepthSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
@@ -100,16 +108,53 @@ NewProjectAudioProcessorEditor::NewProjectAudioProcessorEditor (NewProjectAudioP
 
 NewProjectAudioProcessorEditor::~NewProjectAudioProcessorEditor()
 {
+   setLookAndFeel(nullptr);
 }
 
 //==============================================================================
 void NewProjectAudioProcessorEditor::paint (juce::Graphics& g)
 {
-    // (Our component is opaque, so we must completely fill the background with a solid colour)
-    g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
+    // background
+    g.fillAll(juce::Colour(0xFF111115));
 
-    g.setColour (juce::Colours::white);
-    g.setFont (juce::FontOptions (15.0f));
+    auto area = getLocalBounds().reduced(10);
+    auto sectionW = area.getWidth() / 3;
+
+    g.setFont(juce::Font(juce::Font::getDefaultMonospacedFontName(),
+        10.0f, juce::Font::plain));
+
+    auto drawPanel = [&](juce::Rectangle<int> bounds,
+        const juce::String& title,
+        juce::Colour accent)
+        {
+   
+            g.setColour(juce::Colour(0xFF0F0F14));
+            g.fillRoundedRectangle(bounds.toFloat(), 6.0f);
+
+
+            g.setColour(juce::Colour(0xFF1E1E26));
+            g.drawRoundedRectangle(bounds.toFloat().reduced(0.5f), 6.0f, 0.8f);
+
+  
+            auto bar = bounds.removeFromTop(3).toFloat();
+            g.setColour(accent);
+            g.fillRoundedRectangle(bar, 1.5f);
+
+
+            g.setColour(accent.withAlpha(0.6f));
+            g.drawText(title, bounds.removeFromTop(22),
+                juce::Justification::centred);
+        };
+
+    auto panelArea = getLocalBounds().reduced(10);
+    panelArea.removeFromTop(100); // room for spectrum display
+
+    drawPanel(panelArea.removeFromLeft(sectionW).reduced(4),
+        "BITCRUSH", juce::Colour(0xFF00C87A));
+    drawPanel(panelArea.removeFromLeft(sectionW).reduced(4),
+        "DISTORTION", juce::Colour(0xFFE04040));
+    drawPanel(panelArea.reduced(4),
+        "MORPH", juce::Colour(0xFFE09020));
 }
 
 void NewProjectAudioProcessorEditor::resized()
@@ -146,3 +191,4 @@ void NewProjectAudioProcessorEditor::resized()
     morphComboRow.removeFromTop(labelH);
     morphSourceBox.setBounds(morphComboRow.withSizeKeepingCentre(160, comboH));
 }
+
