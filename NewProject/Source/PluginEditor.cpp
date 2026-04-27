@@ -10,7 +10,7 @@
 #include "PluginEditor.h"
 
 //==============================================================================
-NewProjectAudioProcessorEditor::NewProjectAudioProcessorEditor(NewProjectAudioProcessor& p)
+MorphMiteAudioProcessorEditor::MorphMiteAudioProcessorEditor(MorphMiteAudioProcessor& p)
     : AudioProcessorEditor(&p), audioProcessor(p)
 {
     setLookAndFeel(&style);
@@ -112,14 +112,14 @@ NewProjectAudioProcessorEditor::NewProjectAudioProcessorEditor(NewProjectAudioPr
         audioProcessor.apvts, "morphSource", morphSourceBox);
 }
 
-NewProjectAudioProcessorEditor::~NewProjectAudioProcessorEditor()
+MorphMiteAudioProcessorEditor::~MorphMiteAudioProcessorEditor()
 {
     setLookAndFeel(nullptr);
     audioProcessor.getMorph().spectrumReady = nullptr;
 }
 
 //==============================================================================
-void NewProjectAudioProcessorEditor::paint(juce::Graphics& g)
+void MorphMiteAudioProcessorEditor::paint(juce::Graphics& g)
 {
     // background
     g.fillAll(juce::Colour(Style::COL_BG));
@@ -164,7 +164,7 @@ void NewProjectAudioProcessorEditor::paint(juce::Graphics& g)
         "MORPH", juce::Colour(0xFFE09020));
 }
 
-void NewProjectAudioProcessorEditor::resized()
+void MorphMiteAudioProcessorEditor::resized()
 {
     auto area = getLocalBounds().reduced(20);
 

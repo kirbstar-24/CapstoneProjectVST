@@ -17,18 +17,18 @@
 //==============================================================================
 /**
 */
-class NewProjectAudioProcessorEditor  : public juce::AudioProcessorEditor
+class MorphMiteAudioProcessorEditor  : public juce::AudioProcessorEditor
 {
 public:
-    NewProjectAudioProcessorEditor (NewProjectAudioProcessor&);
-    ~NewProjectAudioProcessorEditor() override;
+    MorphMiteAudioProcessorEditor (MorphMiteAudioProcessor&);
+    ~MorphMiteAudioProcessorEditor() override;
 
     //==============================================================================
     void paint (juce::Graphics&) override;
     void resized() override;
 
 private:
-    NewProjectAudioProcessor& audioProcessor;
+    MorphMiteAudioProcessor& audioProcessor;
 
     Style style;
 
@@ -69,5 +69,5 @@ private:
     SpectrumDisplay spectrumDisplay;
 
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (NewProjectAudioProcessorEditor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MorphMiteAudioProcessorEditor)
 };

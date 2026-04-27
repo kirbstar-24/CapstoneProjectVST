@@ -152,7 +152,7 @@ private:
 		fft->performRealOnlyInverseTransform(fftBuffer.data());
 
 
-		float scale = 160.0f / (float)fftSize;
+		float scale = 2.0f / 3.0f;
 
 		for (int i = 0; i < fftSize; ++i)
 		{
