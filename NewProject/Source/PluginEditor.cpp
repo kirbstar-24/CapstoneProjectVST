@@ -10,19 +10,25 @@
 #include "PluginEditor.h"
 
 //==============================================================================
-NewProjectAudioProcessorEditor::NewProjectAudioProcessorEditor (NewProjectAudioProcessor& p)
-    : AudioProcessorEditor (&p), audioProcessor (p)
+NewProjectAudioProcessorEditor::NewProjectAudioProcessorEditor(NewProjectAudioProcessor& p)
+    : AudioProcessorEditor(&p), audioProcessor(p)
 {
     setLookAndFeel(&style);
     setSize(900, 460);
 
+    addAndMakeVisible(spectrumDisplay);
+
+    audioProcessor.getMorph().spectrumReady = [this](const auto& mags)
+        {
+            spectrumDisplay.sendMagnitudes(mags);
+        };
+
     bitDepthSlider.setName("bitDepth");
-    //downsampleSlider.setName("downsample");
     distDriveSlider.setName("drive");
     distMixSlider.setName("mix");
     morphAmountSlider.setName("morphAmount");
     morphFreqSlider.setName("morphFreq");
- 
+
 
     // ===== Bit Slider ======
     bitDepthSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
@@ -108,14 +114,15 @@ NewProjectAudioProcessorEditor::NewProjectAudioProcessorEditor (NewProjectAudioP
 
 NewProjectAudioProcessorEditor::~NewProjectAudioProcessorEditor()
 {
-   setLookAndFeel(nullptr);
+    setLookAndFeel(nullptr);
+    audioProcessor.getMorph().spectrumReady = nullptr;
 }
 
 //==============================================================================
-void NewProjectAudioProcessorEditor::paint (juce::Graphics& g)
+void NewProjectAudioProcessorEditor::paint(juce::Graphics& g)
 {
     // background
-    g.fillAll(juce::Colour(0xFF111115));
+    g.fillAll(juce::Colour(Style::COL_BG));
 
     auto area = getLocalBounds().reduced(10);
     auto sectionW = area.getWidth() / 3;
@@ -127,15 +134,15 @@ void NewProjectAudioProcessorEditor::paint (juce::Graphics& g)
         const juce::String& title,
         juce::Colour accent)
         {
-   
-            g.setColour(juce::Colour(0xFF0F0F14));
+
+            g.setColour(juce::Colour(Style::COL_PANEL));
             g.fillRoundedRectangle(bounds.toFloat(), 6.0f);
 
 
             g.setColour(juce::Colour(0xFF1E1E26));
             g.drawRoundedRectangle(bounds.toFloat().reduced(0.5f), 6.0f, 0.8f);
 
-  
+
             auto bar = bounds.removeFromTop(3).toFloat();
             g.setColour(accent);
             g.fillRoundedRectangle(bar, 1.5f);
@@ -160,6 +167,9 @@ void NewProjectAudioProcessorEditor::paint (juce::Graphics& g)
 void NewProjectAudioProcessorEditor::resized()
 {
     auto area = getLocalBounds().reduced(20);
+
+    spectrumDisplay.setBounds(area.removeFromTop(88).reduced(0, 4));
+
     auto sectionW = area.getWidth() / 3;
     int  knobSize = 90;
     int  labelH = 30;

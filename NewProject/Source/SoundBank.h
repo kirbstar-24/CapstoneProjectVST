@@ -1,3 +1,12 @@
+/*
+  ==============================================================================
+
+	This file contains the code for the wavetable ocillator generator that can
+	be toggled for the morph effect
+
+  ==============================================================================
+*/
+
 #pragma once
 class SoundBank
 {

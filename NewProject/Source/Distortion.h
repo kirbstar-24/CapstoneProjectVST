@@ -1,3 +1,11 @@
+/*
+  ==============================================================================
+
+	This file contains the code for the distortion effect
+
+  ==============================================================================
+*/
+
 #pragma once
 #include <JuceHeader.h>
 #include <cmath>

@@ -14,6 +14,7 @@
 #include "Morph.h"
 #include "SoundBank.h"
 
+
 //==============================================================================
 /**
 */
@@ -56,6 +57,8 @@ public:
     //==============================================================================
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
+
+    Morph& getMorph() {return morph;}
 
     juce::AudioProcessorValueTreeState apvts;
 

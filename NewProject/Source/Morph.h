@@ -1,3 +1,12 @@
+/*
+  ==============================================================================
+
+	This file contains the code for the morph effect
+	Utilizes this tutorial: https://juce.com/tutorials/tutorial_look_and_feel_customisation/
+
+  ==============================================================================
+*/
+
 #pragma once
 #include <JuceHeader.h>
 
@@ -8,6 +17,7 @@ public:
 	static constexpr int fftSize = 1 << fftOrder;
 	static constexpr int winSlide = fftSize / 4; // quarter window slide
 	static constexpr int bins = fftSize / 2 + 1;
+	std::function<void(const std::array<float, bins>&)> spectrumReady; //display
 
 	void prep(double sampleRate)
 	{
@@ -149,6 +159,17 @@ private:
 			outFifo[(fifoIndex + i) % fftSize] += fftBuffer[i] * scale;
 		}
 
+		if (spectrumReady)
+		{
+			std::array<float, bins> displayMags;
+			for (int i = 0; i < bins; ++i)
+			{
+				float r = fftBuffer[i * 2];
+				float im = fftBuffer[i * 2 + 1];
+				displayMags[i] = std::sqrt(r * r + im * im);
+			}
+			spectrumReady(displayMags);
+		}
 
 	}
 

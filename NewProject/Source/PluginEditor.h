@@ -11,6 +11,8 @@
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
 #include "Style.h"
+#include "SpectrumDisplay.h"
+
 
 //==============================================================================
 /**
@@ -24,7 +26,13 @@ public:
     //==============================================================================
     void paint (juce::Graphics&) override;
     void resized() override;
-    
+
+private:
+    NewProjectAudioProcessor& audioProcessor;
+
+    Style style;
+
+
     // ===== Bit slider =====
     juce::Slider bitDepthSlider;
     juce::Label bitDepthLabel;
@@ -58,12 +66,8 @@ public:
     juce::Label     morphSourceLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> morphSourceAttachment;
 
-private:
-    // This reference is provided as a quick way for your editor to
-    // access the processor object that created it.
-    NewProjectAudioProcessor& audioProcessor;
+    SpectrumDisplay spectrumDisplay;
 
-    Style style;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (NewProjectAudioProcessorEditor)
 };
