@@ -2,6 +2,8 @@ Lucas Grossmann 2026
 
 This is a VST3 FX plugin developed with JUCE.
 
+FX are Bitcrush, Disortion, and a Spectral Morph effect with an option to target looping waves or sidechain. 
+
 To build and use in Windows:
 1. Download Projucer
 2. Open the .jucer file with Projucer and open in Visual Studios
